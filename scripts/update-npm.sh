@@ -20,11 +20,4 @@ if [ "`npm view yarn@$version name`" = 'yarn' ]; then
   exit 0
 fi;
 
-# Determine if this is an RC or a stable release
-release_type=`curl --compressed --fail https://release.yarnpkg.com/release_type/$version`
-npm_flags=''
-if [ "$release_type" = "rc" ]; then
-  npm_flags='--tag rc'
-fi;
-
-eval "npx npm@4 publish '$tarball' --access public $npm_flags"
+eval "npx npm@4 publish '$tarball' --access public"
