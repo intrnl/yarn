@@ -20,4 +20,4 @@ if [ "`npm view yarn@$version name`" = 'yarn' ]; then
   exit 0
 fi;
 
-eval "npx npm@4 publish '$tarball' --access public"
+eval "npm publish '$tarball' --access public"
