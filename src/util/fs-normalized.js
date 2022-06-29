@@ -50,45 +50,38 @@ export const copyFile = async function(data: CopyFileAction, cleanup: () => mixe
   }
 };
 
-// Node 8.5.0 introduced `fs.copyFile` which is much faster, so use that when available.
-// Otherwise we fall back to reading and writing files as buffers.
+
 const copyFilePoly: (src: string, dest: string, flags: number, data: CopyFileAction) => Promise<void> = (
   src,
   dest,
   flags,
   data,
 ) => {
-  if (fs.copyFile) {
-    return new Promise((resolve, reject) =>
-      fs.copyFile(src, dest, flags, err => {
-        if (err) {
-          reject(err);
-        } else {
-          fixTimes(undefined, dest, data).then(() => resolve()).catch(ex => reject(ex));
-        }
-      }),
-    );
-  } else {
-    return copyWithBuffer(src, dest, flags, data);
-  }
-};
+  return new Promise((resolve, reject) => {
+    fs.link(src, dest, (err) => {
+      if (err) {
+        fs.copyFile(src, dest, flags, (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            fixTimes(undefined, dest, data).then(() => resolve()).catch((ex) => reject(ex));
+          }
+        })
+      } else {
+        resolve();
+      }
+    })
+  })
 
-const copyWithBuffer: (src: string, dest: string, flags: number, data: CopyFileAction) => Promise<void> = async (
-  src,
-  dest,
-  flags,
-  data,
-) => {
-  // Use open -> write -> futimes -> close sequence to avoid opening the file twice:
-  // one with writeFile and one with utimes
-  const fd = await open(dest, 'w', data.mode);
-  try {
-    const buffer = await readFileBuffer(src);
-    await write(fd, buffer, 0, buffer.length);
-    await fixTimes(fd, dest, data);
-  } finally {
-    await close(fd);
-  }
+  // return new Promise((resolve, reject) =>
+  //   fs.copyFile(src, dest, flags, err => {
+  //     if (err) {
+  //       reject(err);
+  //     } else {
+  //       fixTimes(undefined, dest, data).then(() => resolve()).catch(ex => reject(ex));
+  //     }
+  //   }),
+  // );
 };
 
 // We want to preserve file timestamps when copying a file, since yarn uses them to decide if a file has

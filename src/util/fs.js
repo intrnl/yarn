@@ -48,7 +48,7 @@ export {unlink};
 // fs.copyFile uses the native file copying instructions on the system, performing much better
 // than any JS-based solution and consumes fewer resources. Repeated testing to fine tune the
 // concurrency level revealed 128 as the sweet spot on a quad-core, 16 CPU Intel system with SSD.
-const CONCURRENT_QUEUE_ITEMS = fs.copyFile ? 128 : 4;
+const CONCURRENT_QUEUE_ITEMS = 128;
 
 const fsSymlink: (target: string, path: string, type?: 'dir' | 'file' | 'junction') => Promise<void> = promisify(
   fs.symlink,
